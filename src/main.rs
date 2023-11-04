@@ -1,6 +1,7 @@
 use log;
 use log::{debug, error, info, LevelFilter};
 use udp_p2p::cli;
+use udp_p2p::client::Client;
 use udp_p2p::logger;
 use udp_p2p::stun::new as new_stun_server;
 
@@ -35,8 +36,14 @@ fn main() {
         }
     }
 
-    if let Some(_stun_flag) = matches.get_one::<String>("stun") {
-        // todo!("make connection to STUN server");
+    if let Some(stun_flag) = matches.get_one::<String>("stun") {
+        match Client::connect(stun_flag) {
+            Ok(()) => info!("Closing connection with remote server"),
+            Err(error) => {
+                error!("Something went wrong while connecting the STUN server");
+                debug!("The error message: {error}");
+            }
+        }
     }
 
     if let Some(_connect_flag) = matches.get_one::<String>("connect code") {

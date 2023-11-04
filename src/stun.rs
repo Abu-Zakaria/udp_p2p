@@ -11,11 +11,6 @@ pub struct StunServer<'a> {
     pub registered_ipv4_addresses: Vec<RegisteredIpv4Address>,
 }
 
-pub struct RegisteredIpv4Address {
-    addr: SocketAddrV4,
-    code: String,
-}
-
 pub fn new<'a>(host: &'a str, port: &'a str) -> StunServer<'a> {
     StunServer {
         host,
@@ -26,9 +21,7 @@ pub fn new<'a>(host: &'a str, port: &'a str) -> StunServer<'a> {
 
 impl<'a> StunServer<'a> {
     pub fn start(&mut self) -> Result<(), Box<dyn error::Error>> {
-        let result = UdpSocket::bind(format!("{}:{}", self.host, self.port));
-
-        let socket = result?;
+        let socket = UdpSocket::bind(format!("{}:{}", self.host, self.port))?;
 
         debug!("Started STUN server successfully at: {:#?}", socket);
 
@@ -41,7 +34,7 @@ impl<'a> StunServer<'a> {
 
                     let mut incoming_message_str: String = String::from("");
 
-                    match String::from_utf8(buf[..length - 1].to_vec()) {
+                    match String::from_utf8(buf[..length].to_vec()) {
                         Ok(message_str) => {
                             incoming_message_str = message_str;
                         }
@@ -51,7 +44,7 @@ impl<'a> StunServer<'a> {
                         }
                     }
 
-                    if length == 9 && incoming_message_str == "REGISTER" {
+                    if length == 8 && incoming_message_str == "REGISTER" {
                         debug!("Registering this IP address: {addr}");
 
                         let (is_registered, code) = self.register(addr);
@@ -110,4 +103,9 @@ impl<'a> StunServer<'a> {
             .map(char::from)
             .collect()
     }
+}
+
+pub struct RegisteredIpv4Address {
+    addr: SocketAddrV4,
+    code: String,
 }
