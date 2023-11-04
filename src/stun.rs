@@ -93,7 +93,7 @@ impl<'a> StunServer<'a> {
             .find(|&item| return item.addr.ip() == addr_v4.ip())
         {
             debug!("IPv4 address already registered: {}", item.addr.ip());
-            (false, String::from(""))
+            (false, item.code.clone())
         } else {
             let new_item = RegisteredIpv4Address {
                 addr: addr_v4,
