@@ -15,22 +15,23 @@ impl<'a> StunServer<'a> {
 
         debug!("Started STUN server successfully at: {:#?}", socket);
 
-        let mut buf = [0; 128];
+        loop {
+            let mut buf = [0; 128];
 
-        match socket.recv_from(&mut buf) {
-            Ok((length, addr)) => {
-                info!("Received {length} bytes from {addr}");
-                info!(
-                    "Message: {}",
-                    String::from_utf8(buf[..length].to_vec()).unwrap()
-                );
-            }
-            Err(error) => {
-                error!("Something went wrong while receiving bytes from a remote source.");
-                debug!("The error message: {error}");
+            match socket.recv_from(&mut buf) {
+                Ok((length, addr)) => {
+                    info!("Received {length} bytes from {addr}");
+                    info!(
+                        "Message: {}",
+                        String::from_utf8(buf[..length].to_vec()).unwrap()
+                    );
+                }
+                Err(error) => {
+                    error!("Something went wrong while receiving bytes from a remote source.");
+                    debug!("The error message: {error}");
+                    break Err("Stopped the STUN server with an error".into());
+                }
             }
         }
-
-        Ok(())
     }
 }
