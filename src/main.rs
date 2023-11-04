@@ -2,7 +2,7 @@ use log;
 use log::{debug, error, info, LevelFilter};
 use udp_p2p::cli;
 use udp_p2p::logger;
-use udp_p2p::stun::StunServer;
+use udp_p2p::stun::new as new_stun_server;
 
 const STUN_HOST: &str = "0.0.0.0";
 const STUN_PORT: &str = "6969";
@@ -23,10 +23,7 @@ fn main() {
 
     if let Some(serve_flag) = matches.get_one::<bool>("serve") {
         if *serve_flag {
-            let stun_server = StunServer {
-                host: STUN_HOST,
-                port: STUN_PORT,
-            };
+            let mut stun_server = new_stun_server(STUN_HOST, STUN_PORT);
 
             match stun_server.start() {
                 Ok(()) => info!("Closing the STUN server!"),
