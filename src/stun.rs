@@ -40,19 +40,19 @@ impl<'a> StunServer<'a> {
                             incoming_message_str = message_str;
                         }
                         Err(error) => {
-                            debug!("Couldn't convert the incoming bytes into UTF-8 string");
+                            error!("Couldn't convert the incoming bytes into UTF-8 string");
                             debug!("ERROR: {}", error);
                         }
                     }
 
                     if length == 8 && incoming_message_str == "REGISTER" {
-                        debug!("Registering this IP address: {addr}");
+                        info!("Registering this IP address: {addr}");
 
                         let (is_registered, code) = self.register(addr);
 
                         if is_registered {
-                            debug!("Successfully registered IP: {}", addr.ip());
-                            debug!("Code: {code}");
+                            info!("Successfully registered IP: {}", addr.ip());
+                            info!("Code: {code}");
                         }
 
                         let length = socket.send_to(code.as_bytes(), addr)?;
