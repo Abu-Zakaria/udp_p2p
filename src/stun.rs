@@ -1,3 +1,4 @@
+use crate::client;
 use log::{debug, error, info};
 use rand::{distributions::Alphanumeric, Rng};
 use std::error;
@@ -53,6 +54,14 @@ impl<'a> StunServer<'a> {
                             debug!("Successfully registered IP: {}", addr.ip());
                             debug!("Code: {code}");
                         }
+
+                        let length = socket.send_to(code.as_bytes(), addr)?;
+
+                        if length != client::CODE_LENGTH {
+                            error!("Code was not sent back successfully. IP: {addr}");
+                        } else {
+                            info!("Code sent to: {addr}")
+                        }
                     }
                 }
                 Err(error) => {
@@ -99,7 +108,7 @@ impl<'a> StunServer<'a> {
     fn generate_code(&mut self) -> String {
         rand::thread_rng()
             .sample_iter(&Alphanumeric)
-            .take(4)
+            .take(client::CODE_LENGTH)
             .map(char::from)
             .collect()
     }

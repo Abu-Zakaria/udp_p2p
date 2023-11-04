@@ -40,13 +40,11 @@ fn main() {
         match Client::connect(stun_flag) {
             Ok(()) => info!("Closing connection with remote server"),
             Err(error) => {
-                error!("Something went wrong while connecting the STUN server");
+                error!("Something went wrong with the internet connection");
                 debug!("The error message: {error}");
             }
         }
     }
 
-    if let Some(_connect_flag) = matches.get_one::<String>("connect code") {
-        // todo!("connect with someone with a code");
-    }
+    if let Some(_connect_flag) = matches.get_one::<String>("connect code") {}
 }
