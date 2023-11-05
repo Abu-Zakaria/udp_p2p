@@ -21,10 +21,10 @@ impl Client {
         info!("Connected to the STUN server [{stun_address}]");
 
         if connect_with != "" {
-            let remote_address = Self::ask_with_code(&socket, &connect_with)?;
+            let remote_address = Self::ask_with_code(&socket, &connect_with).unwrap();
 
             info!("Received remote client's ip address");
-            debug!("Remote client: {remote_address}");
+            debug!("Remote client: [{remote_address}]");
 
             socket.connect(&remote_address)?;
 
@@ -46,7 +46,15 @@ impl Client {
             info!("Your code is: {code}");
         }
 
-        Ok(())
+        loop {
+            let mut buf = [0; 5];
+            let length = socket.recv(&mut buf)?;
+
+            info!(
+                "Received length bytes -> {}",
+                String::from_utf8(buf[0..length].to_vec())?
+            );
+        }
     }
 
     pub fn register(socket: &UdpSocket) -> Result<(), Box<dyn Error>> {

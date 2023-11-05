@@ -70,7 +70,7 @@ impl<'a> StunServer<'a> {
                             &incoming_message_str[(client::ASK_CODE.len() + 1)..],
                         ) {
                             Ok(remote_ip) => {
-                                info!("Responded to {remote_ip} with their requested code's ip address");
+                                info!("Responded with their requested code's ip address [{remote_ip} ]");
                             }
                             Err(error) => {
                                 info!("Couldn't respond to a remote ip with their requested code's ip address");
