@@ -1,4 +1,5 @@
 use crate::client;
+use crate::utils::ip_address;
 use log::{debug, error, info};
 use rand::{distributions::Alphanumeric, Rng};
 use std::error;
@@ -138,9 +139,9 @@ impl<'a> StunServer<'a> {
         let addresses = &self.registered_ipv4_addresses;
 
         if let Some(registered_ip) = addresses.into_iter().find(|&x| x.code == code) {
-            let remote_ip: String = String::from_utf8(registered_ip.addr.ip().octets().to_vec())?
-                + &String::from(":")
-                + &registered_ip.addr.port().to_string();
+            let remote_host = ip_address::octets_to_string(registered_ip.addr.ip().octets());
+            let remote_ip: String =
+                remote_host + &String::from(":") + &registered_ip.addr.port().to_string();
 
             match socket.send_to(remote_ip.as_bytes(), addr) {
                 Ok(length) => {
