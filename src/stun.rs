@@ -45,7 +45,7 @@ impl<'a> StunServer<'a> {
                         }
                     }
 
-                    if length == 8 && incoming_message_str == "REGISTER" {
+                    if incoming_message_str == "REGISTER" {
                         info!("Registering this IP address: {addr}");
 
                         let (is_registered, code) = self.register(addr);
@@ -61,6 +61,20 @@ impl<'a> StunServer<'a> {
                             error!("Code was not sent back successfully. IP: {addr}");
                         } else {
                             info!("Code sent to: {addr}")
+                        }
+                    } else if &incoming_message_str[0..client::ASK_CODE.len()] == client::ASK_CODE {
+                        match self.response_with_code(
+                            &socket,
+                            addr,
+                            &incoming_message_str[(client::ASK_CODE.len() + 1)..],
+                        ) {
+                            Ok(remote_ip) => {
+                                info!("Responded to {remote_ip} with their requested code's ip address");
+                            }
+                            Err(error) => {
+                                info!("Couldn't respond to a remote ip with their requested code's ip address");
+                                Err(error)?
+                            }
                         }
                     }
                 }
@@ -111,6 +125,36 @@ impl<'a> StunServer<'a> {
             .take(client::CODE_LENGTH)
             .map(char::from)
             .collect()
+    }
+
+    fn response_with_code(
+        &mut self,
+        socket: &UdpSocket,
+        addr: SocketAddr,
+        code: &str,
+    ) -> Result<String, Box<dyn error::Error>> {
+        let code = String::from(code.trim());
+
+        let addresses = &self.registered_ipv4_addresses;
+
+        if let Some(registered_ip) = addresses.into_iter().find(|&x| x.code == code) {
+            let remote_ip: String = String::from_utf8(registered_ip.addr.ip().octets().to_vec())?
+                + &String::from(":")
+                + &registered_ip.addr.port().to_string();
+
+            match socket.send_to(remote_ip.as_bytes(), addr) {
+                Ok(length) => {
+                    if length == 0 {
+                        Err("Couldn't send back the requested ")?
+                    } else {
+                        return Ok(remote_ip);
+                    }
+                }
+                Err(error) => Err(error)?,
+            }
+        }
+
+        Err("No registered client found with the code")?
     }
 }
 

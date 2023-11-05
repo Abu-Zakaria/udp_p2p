@@ -1,4 +1,4 @@
-use log::info;
+use log::{debug, info};
 use std::error::Error;
 use std::net::UdpSocket;
 
@@ -6,8 +6,8 @@ pub struct Client;
 
 const LOCAL_HOST: &str = "0.0.0.0";
 const LOCAL_PORT: &str = "4823";
-const ASK_CODE: &str = "ASK_CODE";
 
+pub const ASK_CODE: &str = "ASK_CODE";
 pub const CODE_LENGTH: usize = 4;
 
 impl Client {
@@ -23,7 +23,12 @@ impl Client {
         if connect_with != "" {
             let remote_address = Self::ask_with_code(&socket, &connect_with)?;
 
-            info!("Successfully connected with remote address");
+            info!("Received remote client's ip address");
+            debug!("Remote client: {remote_address}");
+
+            socket.connect(&remote_address)?;
+
+            info!("Connected with remote client");
         } else {
             Self::register(&socket)?;
             info!("Registered to STUN server");
