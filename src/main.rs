@@ -31,6 +31,7 @@ fn main() {
                 Err(error) => {
                     error!("Something went wrong with the stun server");
                     debug!("The error message: {error}");
+                    return;
                 }
             }
         }
