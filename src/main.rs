@@ -36,15 +36,24 @@ fn main() {
         }
     }
 
-    if let Some(stun_flag) = matches.get_one::<String>("stun") {
-        match Client::connect(stun_flag) {
-            Ok(()) => info!("Closing connection with remote server"),
-            Err(error) => {
-                error!("Something went wrong with the internet connection");
-                debug!("The error message: {error}");
-            }
-        }
+    let mut stun_flag = String::from("");
+    let mut connect_flag = String::from("");
+
+    match matches.get_one::<String>("stun") {
+        Some(flag) => stun_flag = flag.to_string(),
+        None => debug!("STUN server address not given"),
     }
 
-    if let Some(_connect_flag) = matches.get_one::<String>("connect code") {}
+    match matches.get_one::<String>("connect code") {
+        Some(flag) => connect_flag = flag.to_string(),
+        None => debug!("Connect code not given"),
+    }
+
+    match Client::connect_stun(&stun_flag, &connect_flag) {
+        Ok(()) => info!("Completed all actions. Goodbye!"),
+        Err(error) => {
+            error!("Something went wrong while registering to STUN server");
+            debug!("The error message: {error}");
+        }
+    }
 }
