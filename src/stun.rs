@@ -6,6 +6,8 @@ use std::error;
 use std::net::{SocketAddr, SocketAddrV4, UdpSocket};
 use std::vec::Vec;
 
+pub const REQUEST: &str = "REQUEST";
+
 pub struct StunServer<'a> {
     pub host: &'a str,
     pub port: &'a str,
@@ -92,6 +94,11 @@ impl<'a> StunServer<'a> {
 
                             // send the remote client's address to the matched ip address
                             // so they can establish a p2p connection
+                            self.inform_other_peer(
+                                &socket,
+                                item.addr.ip().to_string() + ":" + &item.addr.port().to_string(),
+                                remote_host.to_string() + ":" + &remote_port.to_string(),
+                            );
                         }
                     }
                 }
@@ -172,6 +179,22 @@ impl<'a> StunServer<'a> {
         }
 
         Err("No registered client found with the code")?
+    }
+
+    fn inform_other_peer(self: &Self, socket: &UdpSocket, peer: String, remote_address: String) {
+        debug!("peer: {peer}");
+        debug!("remote: {remote_address}");
+
+        let message = String::from(REQUEST) + &remote_address;
+
+        match socket.send_to(message.as_bytes(), peer) {
+            Ok(length) => {
+                debug!("sent data's length: {length}")
+            }
+            Err(error) => {
+                error!("found an error: {error}")
+            }
+        }
     }
 }
 

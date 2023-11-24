@@ -31,6 +31,7 @@ impl Client {
             Self::broadcast_ip(&socket, &connect_with)?;
 
             loop {
+                debug!("Trying to connect with remote peer");
                 Self::connect_remote(&socket, &remote_address)?;
 
                 let sleep_delay = time::Duration::from_millis(500);
@@ -54,17 +55,26 @@ impl Client {
             let code = String::from_utf8(buf.to_vec())?;
 
             info!("Your code is: {code}");
+
+            loop {
+                let mut buf = [0; 32];
+                let length = socket.recv(&mut buf)?;
+                info!(
+                    "Received string: {}",
+                    String::from_utf8(buf[0..length].to_vec())?
+                )
+            }
         }
 
-        loop {
-            let mut buf = [0; 5];
-            let length = socket.recv(&mut buf)?;
+        //         loop {
+        //             let mut buf = [0; 5];
+        //             let length = socket.recv(&mut buf)?;
 
-            info!(
-                "Received length bytes -> {}",
-                String::from_utf8(buf[0..length].to_vec())?
-            );
-        }
+        //             info!(
+        //                 "Received length bytes -> {}",
+        //                 String::from_utf8(buf[0..length].to_vec())?
+        //             );
+        //         }
     }
 
     pub fn register(socket: &UdpSocket) -> Result<(), Box<dyn Error>> {
