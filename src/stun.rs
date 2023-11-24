@@ -70,12 +70,28 @@ impl<'a> StunServer<'a> {
                             &incoming_message_str[(client::ASK_CODE.len() + 1)..],
                         ) {
                             Ok(remote_ip) => {
-                                info!("Responded with their requested code's ip address [{remote_ip} ]");
+                                info!("Responded with their requested code's ip address [{remote_ip}]");
                             }
                             Err(error) => {
                                 info!("Couldn't respond to a remote ip with their requested code's ip address");
                                 Err(error)?
                             }
+                        }
+                    } else if &incoming_message_str[0..client::BROADCAST.len()] == client::BROADCAST
+                    {
+                        let remote_host = addr.ip();
+                        let remote_port = addr.port();
+                        let code = &incoming_message_str[client::BROADCAST.len()..];
+
+                        debug!("code: {:?}", code);
+
+                        let addresses = &self.registered_ipv4_addresses;
+
+                        if let Some(item) = addresses.into_iter().find(|&item| item.code == code) {
+                            println!("matched with {} {}", item.code, item.addr.ip());
+
+                            // send the remote client's address to the matched ip address
+                            // so they can establish a p2p connection
                         }
                     }
                 }

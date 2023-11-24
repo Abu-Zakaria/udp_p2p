@@ -1,6 +1,7 @@
 use log::{debug, info};
 use std::error::Error;
 use std::net::UdpSocket;
+use std::{thread, time};
 
 pub struct Client;
 
@@ -9,6 +10,7 @@ const LOCAL_PORT: &str = "4823";
 
 pub const ASK_CODE: &str = "ASK_CODE";
 pub const CODE_LENGTH: usize = 4;
+pub const BROADCAST: &str = "BROADCAST";
 
 impl Client {
     pub fn connect_stun(stun_address: &str, connect_with: &str) -> Result<(), Box<dyn Error>> {
@@ -26,9 +28,17 @@ impl Client {
             info!("Received remote client's ip address");
             debug!("Remote client: [{remote_address}]");
 
-            socket.connect(&remote_address)?;
+            Self::broadcast_ip(&socket, &connect_with)?;
 
-            info!("Connected with remote client");
+            loop {
+                Self::connect_remote(&socket, &remote_address)?;
+
+                let sleep_delay = time::Duration::from_millis(500);
+                thread::sleep(sleep_delay);
+            }
+
+            // Keep connecting to the remote client
+            // and the remote client also needs to try keep connecting to local client
         } else {
             Self::register(&socket)?;
             info!("Registered to STUN server");
@@ -95,5 +105,33 @@ impl Client {
             }
             Err(error) => Err(error)?,
         }
+    }
+
+    fn broadcast_ip(socket: &UdpSocket, code: &str) -> Result<(), Box<dyn Error>> {
+        let mut message = String::from(BROADCAST);
+
+        message += code;
+
+        match socket.send(message.as_bytes()) {
+            Ok(size) => {
+                if size != 13 {
+                    Err("Couldn't broadcast successfully!")?
+                }
+            }
+            Err(error) => Err(error)?,
+        }
+        Ok(())
+    }
+
+    fn connect_remote(socket: &UdpSocket, remote_address: &str) -> Result<(), Box<dyn Error>> {
+        socket.connect(remote_address)?;
+
+        info!("Connected with remote client");
+
+        let message = String::from("Hi there");
+
+        socket.send(message.as_bytes())?;
+
+        Ok(())
     }
 }
